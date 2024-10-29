@@ -9,6 +9,25 @@ import java.util.Arrays;
 import java.lang.RuntimeException;
 
 public class ArrayStack {
+
+    public static void main(String[] args) {
+        ArrayStack stack = new ArrayStack();
+        System.out.println(stack.isEmpty());
+        stack.push('A');
+        stack.push('B');
+        System.out.println(stack.size());
+        System.out.println(stack.isFull());
+
+        // This should trigger an expansion
+        stack.push('C');  // Expected output: expansion messages
+        System.out.println(stack.size());
+
+        stack.push('D');
+        stack.push('E');
+        System.out.println(stack.pop());
+
+        System.out.println(stack.top());
+    }
     
     private final static int startingSize = 2;
     private char[] stack;
@@ -72,6 +91,8 @@ public class ArrayStack {
     private void resize()
     {
         capacity *= 2;
+        System.out.println("Stack is full; its current size is " + stack.length + "\n"+
+                "Will be expanding the size to " + capacity);
         stack = Arrays.copyOf(stack, capacity);
     }
 
