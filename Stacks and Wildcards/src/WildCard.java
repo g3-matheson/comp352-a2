@@ -2,7 +2,10 @@
 
 public class WildCard 
 {
-    
+    static final char opening = '('; // opening delimiters
+    static final char closing = ')'; // respective closing delimiters
+    static final char wildcard = '*';
+
     public static void main(String[] args)
     {
 
@@ -24,10 +27,6 @@ public class WildCard
 
     public static boolean isMatched(String expression) 
     {
-        final char opening = '('; // opening delimiters
-        final char closing = ')'; // respective closing delimiters
-        final char wildcard = '*';
-
         ArrayStack openBuffer = new ArrayStack();
         ArrayStack closeBuffer = new ArrayStack();
         int wildcardCount = 0;
@@ -39,11 +38,15 @@ public class WildCard
             {
                 // stacks have to be resolved anytime a ( is seen when ) is not empty
                 // this will either return invalid or "restart" the stacks
-                if (!closeBuffer.isEmpty() && checkStacks(openBuffer, closeBuffer, wildcardCount))
+                if (!closeBuffer.isEmpty())
                 {
-                    openBuffer = new ArrayStack();
-                    closeBuffer = new ArrayStack();
-                    wildcardCount = 0;
+                    if(checkStacks(openBuffer, closeBuffer, wildcardCount)) // if "sub"stack valid, continue
+                    {
+                        openBuffer = new ArrayStack();
+                        closeBuffer = new ArrayStack();
+                        wildcardCount = 0;
+                    }
+                    else return false; // if "sub"stack invalid, entire thing will be invalid
                 }
                 
                 // add ( either to existing buffers or new ones
