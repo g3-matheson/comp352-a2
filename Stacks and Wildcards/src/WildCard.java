@@ -32,36 +32,33 @@ public class WildCard
         ArrayStack closeBuffer = new ArrayStack();
         int wildcardCount = 0;
 
-        // process string into the stacks
+        // process string one character at a time
         for (char c : expression.toCharArray()) 
         {
-            if (opening == c) // this is a left delimiter
+            if (opening == c) // left delimiter ()
             {
+                // stacks have to be resolved anytime a ( is seen when ) is not empty
+                // this will either return invalid or "restart" the stacks
                 if (!closeBuffer.isEmpty() && checkStacks(openBuffer, closeBuffer, wildcardCount))
                 {
                     openBuffer = new ArrayStack();
                     closeBuffer = new ArrayStack();
                     wildcardCount = 0;
                 }
-                // stacks have to be resolved anytime a ( is seen when ) is not empty
+                
+                // add ( either to existing buffers or new ones
                 openBuffer.push(c);
             }
-            else if (closing == c) 
-            { // this is a right delimiter
+            else if (closing == c) // right delimiter )
+            { 
                 closeBuffer.push(c);
             } 
             else if (c == wildcard) 
             {
                 wildcardCount++;
             } 
-            else break; // end char ($)
+            else break; // end char ($) or anything else unexpected
         }
-
-        /* testing
-        System.out.printf("Open Stack: %s%n", openBuffer.toString());
-        System.out.printf("Closed Stack: %s%n", closeBuffer.toString());
-        System.out.printf("%s wildcards%n", wildcardCount);
-        */
 
         return checkStacks(openBuffer, closeBuffer, wildcardCount);
     }
@@ -70,25 +67,28 @@ public class WildCard
     {
         while(true)
         {
-            if(!closeBuffer.isEmpty() && !openBuffer.isEmpty()) // both not empty
+            if(openBuffer.isEmpty() && closeBuffer.isEmpty()) break; // both empty, ignore wildcards, VALID!
+
+            if(!closeBuffer.isEmpty() && !openBuffer.isEmpty()) // both not empty, remove ()
             {
                 openBuffer.pop();
                 closeBuffer.pop();
                 //System.out.printf("Both not empty.\n Open: %s%n Closed: %s%n Wildcards: %s%n", openBuffer.toString(), closeBuffer.toString(), wildcardCount);
                 continue;
             }
-            if(openBuffer.isEmpty() && closeBuffer.isEmpty()) break;
+            
             else // one of them is empty
             {
-                if(wildcardCount == 0) return false; // ( or ) left with no wildcard, so false
-                else if(!openBuffer.isEmpty())
+                if(wildcardCount == 0) return false; // ( or ) remaining with no wildcard, so INVALID
+
+                else if(!openBuffer.isEmpty()) // (* cancel
                 { 
                     openBuffer.pop();
                     wildcardCount--;
                     //System.out.printf("Open not empty.\n Open: %s%n Closed: %s%n Wildcards: %s%n", openBuffer.toString(), closeBuffer.toString(), wildcardCount);
                     continue;
                 } 
-                else if(!closeBuffer.isEmpty())
+                else if(!closeBuffer.isEmpty()) // *) cancel
                 {
                     closeBuffer.pop();
                     wildcardCount--;
@@ -97,7 +97,8 @@ public class WildCard
                 }
             }
         }
-        //System.out.println("Made it here");
+
+        // both buffers are empty, regardless of how many wildcards left it's valid
         return true;
     }
 
