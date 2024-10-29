@@ -5,57 +5,70 @@
     followed by a message indicating the stack will be expanded and to what size
 */
 
-import java.util.Arrays;
 import java.lang.RuntimeException;
 
 public class ArrayStack {
 
+    /* 
     public static void main(String[] args) {
-        ArrayStack stack = new ArrayStack();
-        System.out.println(stack.isEmpty());
-        stack.push('A');
-        stack.push('B');
-        System.out.println(stack.size());
-        System.out.println(stack.isFull());
+        ArrayStack testStack = new ArrayStack();
+        
+        System.out.println(testStack.isEmpty());
+
+        testStack.push('A');
+        System.out.println(testStack.toString());
+        testStack.push('B');
+        System.out.println(testStack.toString());
+        
+        System.out.println(testStack.size());
+        System.out.println(testStack.isFull());
 
         // This should trigger an expansion
-        stack.push('C');  // Expected output: expansion messages
-        System.out.println(stack.size());
+        testStack.push('C');  // Expected output: expansion messages
+        System.out.println(testStack.toString());
+        System.out.println(testStack.size());
 
-        stack.push('D');
-        stack.push('E');
-        System.out.println(stack.pop());
+        testStack.push('D');
+        System.out.println(testStack.toString());
+        testStack.push('E');
+        System.out.println(testStack.toString());
+        System.out.println(testStack.pop());
 
-        System.out.println(stack.top());
+        System.out.println(testStack.top());
+        System.out.println(testStack.toString());
     }
+    */
     
     private final static int startingSize = 2;
     private char[] stack;
     private int capacity;
     // iterator
-    private int i;
+    private int iterator;
     
     // constructor
     public ArrayStack()
     {
         stack = new char[startingSize];
         capacity = startingSize;
-        i = 0;
+        iterator = 0;
     }
 
     // pushes a new character onto the stack
     public void push(char c){
-        stack[i++] = c;
+        stack[iterator] = c;
+        iterator++;
+       
         if(isFull()) resize();
     }
 
     // pops a character from the stack
     public char pop(){
-        if(isEmpty()) throw new RuntimeException("Stack is empty, cannot pop an element.");
+        if(isEmpty()) throw new RuntimeException("Stack is empty, cannot pop() an element.");
         else
         {
             char c = top();
-            stack[i--] = (char) 0; // char null (\u0000)
+            stack[iterator-1] = (char) 0; // char null (\u0000)
+            iterator--;
             return c;
         }
         
@@ -64,20 +77,20 @@ public class ArrayStack {
     // returns the character at the top of the stack without removing it
     public char top()
     {
-        char c = stack[i];
-        return c;
+        if(isEmpty()) throw new RuntimeException("Stack is empty, cannot top() an element.");
+        return stack[iterator-1];
     }
     
     // returns the current size of the stack
     public int size()
     {
-        return i;
+        return iterator;
     }
 
     // returns whether or not the stack is empty
     public boolean isEmpty()
     {
-        if(size() == 0) return true;
+        if(iterator == 0) return true;
         return false;
     }
 
@@ -91,10 +104,25 @@ public class ArrayStack {
     private void resize()
     {
         capacity *= 2;
-        System.out.println("Stack is full; its current size is " + stack.length + "\n"+
-                "Will be expanding the size to " + capacity);
-        stack = Arrays.copyOf(stack, capacity);
+        System.out.println("Stack is full, with current capacity " + iterator + ".\n"+
+                "Capacity will be increased to: " + capacity +".\n");
+        char[] tmpStack = new char[capacity];
+        for(int i = 0; i < size(); i++)
+        {
+            tmpStack[i] = stack[i];
+        }
+        stack = tmpStack;
     }
 
+    public String toString()
+    {
+        String s = "";
+        for(int i = 0; i < iterator; i++)
+        {
+            s += stack[i];
+        }
+        return s;
+    }
+    
 
 }
