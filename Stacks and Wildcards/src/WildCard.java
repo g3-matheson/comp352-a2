@@ -42,20 +42,39 @@ public class WildCard
         {
             nTests++;
             String nextLine = fileIn.nextLine();
+            // remove trailing spaces and $ char, split on ','
             String[] parsedLine = nextLine.replaceAll("\s||$", "").split(",");
             wildcardTest(parsedLine[0], parsedLine[1].equals("1")? true : false);
         }
-
-        fileIn.close();
+        fileIn.close(); // done reading file, close
 
         // report findings
-        System.out.printf("%s tests performed, %s correct (%2s%%)", nTests, nCorrect, 100 * (float) nCorrect / nTests);
+        System.out.printf("%s tests performed, %s correct (%.5s%%)", nTests, nCorrect, 100 * (float) nCorrect / nTests);
+    }
+
+    // tests string s both forward and backward with isValid()
+    // if both directions are valid, "returns" true via nCorrect++
+    // it prints the string, isValid() output and what the answer should have been
+    private static void wildcardTest(String s, boolean valid)
+    {
+        // has to be true in reverse as well due to symmetry
+        // resolves problem of cases like *( being considered valid (when done "forward")
+        boolean algoAnswer = isValid(s, opening, closing) 
+                          && isValid(new StringBuilder(s).reverse().toString(), closing, opening);
+        if(algoAnswer== valid) nCorrect++; // for testing
+        if(algoAnswer!= valid || !silenceCorrectTests) // can silence correct tests to narrow down problems
+        {
+            System.out.printf("Test %s: %s%n", nTests, s);
+            System.out.printf("Output: %s%n", algoAnswer? "Valid" : "Invalid");
+            System.out.printf("%s%n%n", algoAnswer== valid? "Correct" : "Incorrect");
+        }
+        
     }
 
     // checks if wildcard expression is valid
     // when forward: opener is (, closer is )
     // when backward: opener is ), closer is (
-    public static boolean isMatched(String expression, char opener, char closer) 
+    public static boolean isValid(String expression, char opener, char closer) 
     {
         // initialize
         openStack = new ArrayStack();
@@ -71,24 +90,25 @@ public class WildCard
             char c = expression.charAt(i);
             if(c == opener) 
             {
-                if(i == n-1) return false; // INVALID if opener at the end
-                else openStack.push(opener); 
+                if(i == n-1) return false; // INVALID if opener at the end of the string
+                else openStack.push(opener); // openers always counted otherwise
             }
             else if(c == closer)
             {
                 if(openStack.isEmpty()) // if no opener to match closer, have to use wildcard
                 {
                     if(wildcardCount == 0) return false; // INVALID if no wildcards left
-                    else wildcardCount--; // subtract wildcard
+                    else wildcardCount--; // subtract wildcard to cancel closer
                 }
-                else openStack.pop();
+                else openStack.pop(); // if opener present, cancel with closer
             }
             else if(c == wildcard) wildcardCount++;
         }
         
-        // now there can only be *'s or openers left
-        // but *( will be treated as valid when "forward"
-        // so both directions are checked
+        // now there can only be wildcards or openers left (hanging closers lead to INVALID)
+            // but *( will be treated as valid when "forward"
+            // so the other direction is called as well where ( is a hanging closer
+            // that doesn't yet see the wildcard to its left
         while(!openStack.isEmpty())
         {
             if(wildcardCount > 0) // pop if wildcard available
@@ -99,24 +119,8 @@ public class WildCard
             else break;
         }
 
+        // if the string is valid there can't be any unmatched openers
         return openStack.isEmpty();
-
-    }
-
-    private static void wildcardTest(String s, boolean valid)
-    {
-        // has to be true in reverse as well due to symmetry
-        // resolves problem of cases like *( being considered valid (when done "forward")
-        boolean algoAnswer = isMatched(s, opening, closing) 
-                          && isMatched(new StringBuilder(s).reverse().toString(), closing, opening);
-        if(algoAnswer== valid) nCorrect++; // testing
-        if(algoAnswer!= valid || !silenceCorrectTests) // dev option
-        {
-            System.out.printf("Test %s: %s%n", nTests, s);
-            System.out.printf("Output: %s%n", algoAnswer? "Valid" : "Invalid");
-            System.out.printf("%s%n%n", algoAnswer== valid? "Correct" : "Incorrect");
-        }
-        
     }
 }
 
