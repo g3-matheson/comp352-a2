@@ -23,9 +23,12 @@ public class WildCard
         String filename = "src\\test_answers.txt";
         Scanner fileIn;
 
-        try {
+        try 
+        {
 			fileIn = new Scanner(new FileInputStream(filename));
-		} catch (FileNotFoundException e) {
+		} 
+        catch (FileNotFoundException e) 
+        {
 			System.out.println("File with name " + filename + " was not found or could not be opened.");
 			return;
 		}
