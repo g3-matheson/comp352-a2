@@ -7,9 +7,9 @@ public class WildCard
     static final char opening = '('; // opening delimiters
     static final char closing = ')'; // respective closing delimiters
     static final char wildcard = '*';
+    static final char endchar = '$';
 
     static ArrayStack openStack;
-    static ArrayStack closeStack;
     static int wildcardCount;
 
     static boolean silenceResizing = true;
@@ -25,9 +25,9 @@ public class WildCard
 
         try 
         {
-			fileIn = new Scanner(new FileInputStream(filename));
-		} 
-        catch (FileNotFoundException e) 
+            fileIn = new Scanner(new FileInputStream(filename));
+		}
+        catch (FileNotFoundException e)
         {
 			System.out.println("File with name " + filename + " was not found or could not be opened.");
 			return;
@@ -49,74 +49,53 @@ public class WildCard
     public static boolean isMatched(String expression) 
     {
         openStack = new ArrayStack();
-        closeStack = new ArrayStack();
         wildcardCount = 0;
 
-        if(silenceResizing)
-        {
-            openStack.silence();
-            closeStack.silence();
-        }
-
+        if(silenceResizing) openStack.silence();
+        
+        int n = expression.length();
         // process string one character at a time
-        for (char c : expression.toCharArray()) 
+        for(int i = 0; i < n; i++)
         {
-            switch(c)
+            switch(expression.charAt(i))
             {
                 case opening:
-                    // stacks need to be resolved when a new ( comes after )
-                    if (!closeStack.isEmpty()) cleanStacks(); // this instance of cleanStacks can leave residual elements in stacks
-                    openStack.push(c);
+                    if(i == n-2) return false;
+                    else openStack.push('(');
                     break;
                 case closing:
-                    if(openStack.isEmpty() && wildcardCount == 0) return false;
-                    closeStack.push(c);
+                    if(openStack.isEmpty())
+                    {
+                        if(wildcardCount == 0) return false;
+                        else wildcardCount--;
+                    }
+                    else
+                    {
+                        openStack.pop();
+                    }
                     break;
                 case wildcard:
                     wildcardCount++;
                     break;
+                case endchar:
                 default:
                     break;
+
             }
         }
-        cleanStacks(); // this instance of cleanStacks() must make the stacks empty for validity
-        boolean valid = (openStack.isEmpty() && closeStack.isEmpty());
-        return valid;
-    }
-        
-    private static void cleanStacks()
-    {
-        while(true)
-        {
-            if(openStack.isEmpty() && closeStack.isEmpty()) return;; // both empty, ignore wildcards and return
 
-            if(!closeStack.isEmpty() && !openStack.isEmpty()) // both not empty, remove ()
+        while(!openStack.isEmpty())
+        {
+            if(wildcardCount > 0)
             {
                 openStack.pop();
-                closeStack.pop();
-                continue;
+                wildcardCount--;
             }
-            
-            else // one of them is empty
-            {
-                // '(' or ')' remaining with no wildcard, so return
-                // not necessarily invalid, since this can just be residuals left from a cleanup before the end of the string
-                if(wildcardCount == 0) return; 
-
-                else if(!openStack.isEmpty()) // (* cancel
-                { 
-                    openStack.pop();
-                    wildcardCount--;
-                    continue;
-                } 
-                else if(!closeStack.isEmpty()) // *) cancel
-                {
-                    closeStack.pop();
-                    wildcardCount--;
-                    continue;
-                }
-            }
+            else break;
         }
+
+        return openStack.isEmpty();
+
     }
 
     private static void wildcardTest(String s, boolean valid)
