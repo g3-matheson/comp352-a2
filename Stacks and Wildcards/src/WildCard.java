@@ -54,7 +54,7 @@ public class WildCard
 
     // tests string s both forward and backward with isValid()
     // if both directions are valid, "returns" true via nCorrect++
-    // it prints the string, isValid() output and what the answer should have been
+    // it prints the string, isValid() output and if this output matches the correct answer from the file
     private static void wildcardTest(String s, boolean valid)
     {
         // has to be true in reverse as well due to symmetry
