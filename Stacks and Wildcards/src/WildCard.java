@@ -6,12 +6,17 @@ public class WildCard
     static final char closing = ')'; // respective closing delimiters
     static final char wildcard = '*';
 
+    static ArrayStack openBuffer;
+    static ArrayStack closeBuffer;
+    static int wildcardCount;
+
     public static void main(String[] args)
     {
 
         wildcardTest("((*)))", true);
         wildcardTest("((*))))", false);
         wildcardTest("((*))(*))", true);
+        wildcardTest("((())())", true);
 
         /* 
     
@@ -27,10 +32,11 @@ public class WildCard
 
     public static boolean isMatched(String expression) 
     {
-        ArrayStack openBuffer = new ArrayStack();
-        ArrayStack closeBuffer = new ArrayStack();
-        int wildcardCount = 0;
 
+        openBuffer = new ArrayStack();
+        closeBuffer = new ArrayStack();
+        wildcardCount = 0;
+        
         // process string one character at a time
         for (char c : expression.toCharArray()) 
         {
@@ -40,13 +46,7 @@ public class WildCard
                 // this will either return invalid or "restart" the stacks
                 if (!closeBuffer.isEmpty())
                 {
-                    if(checkStacks(openBuffer, closeBuffer, wildcardCount)) // if "sub"stack valid, continue
-                    {
-                        openBuffer = new ArrayStack();
-                        closeBuffer = new ArrayStack();
-                        wildcardCount = 0;
-                    }
-                    else return false; // if "sub"stack invalid, entire thing will be invalid
+                    cleanStacks();
                 }
                 
                 // add ( either to existing buffers or new ones
@@ -63,10 +63,12 @@ public class WildCard
             else break; // end char ($) or anything else unexpected
         }
 
-        return checkStacks(openBuffer, closeBuffer, wildcardCount);
+        cleanStacks();
+        boolean valid = (openBuffer.isEmpty() && closeBuffer.isEmpty());
+        return valid;
     }
         
-    private static boolean checkStacks(ArrayStack openBuffer, ArrayStack closeBuffer, int wildcardCount)
+    private static void cleanStacks()
     {
         while(true)
         {
@@ -82,7 +84,7 @@ public class WildCard
             
             else // one of them is empty
             {
-                if(wildcardCount == 0) return false; // ( or ) remaining with no wildcard, so INVALID
+                if(wildcardCount == 0) break; // ( or ) remaining with no wildcard, so INVALID
 
                 else if(!openBuffer.isEmpty()) // (* cancel
                 { 
@@ -100,9 +102,6 @@ public class WildCard
                 }
             }
         }
-
-        // both buffers are empty, regardless of how many wildcards left it's valid
-        return true;
     }
 
     private static void wildcardTest(String s, boolean valid)
