@@ -1,70 +1,58 @@
-// implements main method 
-
 public class WildCard 
 {
     static final char opening = '('; // opening delimiters
     static final char closing = ')'; // respective closing delimiters
     static final char wildcard = '*';
 
-    static ArrayStack openBuffer;
-    static ArrayStack closeBuffer;
+    static ArrayStack openStack;
+    static ArrayStack closeStack;
     static int wildcardCount;
+
+    static boolean silenceResizing = true;
 
     public static void main(String[] args)
     {
-
-        wildcardTest("((*)))", true);
-        wildcardTest("((*))))", false);
-        wildcardTest("((*))(*))", true);
-        wildcardTest("((())())", true);
-
-        /* 
-    
-        System.out.println(isMatched("((*))))$") ? "Valid" : "Invalid"); // invalid
-        System.out.println(isMatched("(((*))$") ? "Valid" : "Invalid"); // valid
-        System.out.println(isMatched("((()))))$") ? "Valid" : "Invalid"); // invalid
-        System.out.println(isMatched("****$") ? "Valid" : "Invalid"); // valid
-        System.out.println(isMatched("((*))(*))$") ? "Valid" : "Invalid"); // invalid
-        System.out.println(isMatched("((*)((*)$") ? "Valid" : "Invalid"); // valid
-    
-        */
+        // replace with file io
+        wildcardTest("((*)))$", true);
+        wildcardTest("((*))))$", false);
+        wildcardTest("((*))(*))$", true);
+        wildcardTest("((())())$", true);
     }
 
     public static boolean isMatched(String expression) 
     {
-
-        openBuffer = new ArrayStack();
-        closeBuffer = new ArrayStack();
+        openStack = new ArrayStack();
+        closeStack = new ArrayStack();
         wildcardCount = 0;
-        
+
+        if(silenceResizing)
+        {
+            openStack.silence();
+            closeStack.silence();
+        }
+
         // process string one character at a time
         for (char c : expression.toCharArray()) 
         {
-            if (opening == c) // left delimiter ()
+            switch(c)
             {
-                // stacks have to be resolved anytime a ( is seen when ) is not empty
-                // this will either return invalid or "restart" the stacks
-                if (!closeBuffer.isEmpty())
-                {
-                    cleanStacks();
-                }
-                
-                // add ( either to existing buffers or new ones
-                openBuffer.push(c);
+                case opening:
+                    // stacks need to be resolved when a new ( comes after )
+                    if (!closeStack.isEmpty()) cleanStacks(); // this instance of cleanStacks can leave residual elements in stacks
+                    openStack.push(c);
+                    break;
+                case closing:
+                    closeStack.push(c);
+                    break;
+                case wildcard:
+                    wildcardCount++;
+                    break;
+                default:
+                    break;
             }
-            else if (closing == c) // right delimiter )
-            { 
-                closeBuffer.push(c);
-            } 
-            else if (c == wildcard) 
-            {
-                wildcardCount++;
-            } 
-            else break; // end char ($) or anything else unexpected
         }
-
-        cleanStacks();
-        boolean valid = (openBuffer.isEmpty() && closeBuffer.isEmpty());
+        cleanStacks(); // this instance of cleanStacks() must make the stacks empty for validity
+        boolean valid = (openStack.isEmpty() && closeStack.isEmpty());
         return valid;
     }
         
@@ -72,32 +60,31 @@ public class WildCard
     {
         while(true)
         {
-            if(openBuffer.isEmpty() && closeBuffer.isEmpty()) break; // both empty, ignore wildcards, VALID!
+            if(openStack.isEmpty() && closeStack.isEmpty()) return;; // both empty, ignore wildcards and return
 
-            if(!closeBuffer.isEmpty() && !openBuffer.isEmpty()) // both not empty, remove ()
+            if(!closeStack.isEmpty() && !openStack.isEmpty()) // both not empty, remove ()
             {
-                openBuffer.pop();
-                closeBuffer.pop();
-                //System.out.printf("Both not empty.\n Open: %s%n Closed: %s%n Wildcards: %s%n", openBuffer.toString(), closeBuffer.toString(), wildcardCount);
+                openStack.pop();
+                closeStack.pop();
                 continue;
             }
             
             else // one of them is empty
             {
-                if(wildcardCount == 0) break; // ( or ) remaining with no wildcard, so INVALID
+                // '(' or ')' remaining with no wildcard, so return
+                // not necessarily invalid, since this can just be residuals left from a cleanup before the end of the string
+                if(wildcardCount == 0) return; 
 
-                else if(!openBuffer.isEmpty()) // (* cancel
+                else if(!openStack.isEmpty()) // (* cancel
                 { 
-                    openBuffer.pop();
+                    openStack.pop();
                     wildcardCount--;
-                    //System.out.printf("Open not empty.\n Open: %s%n Closed: %s%n Wildcards: %s%n", openBuffer.toString(), closeBuffer.toString(), wildcardCount);
                     continue;
                 } 
-                else if(!closeBuffer.isEmpty()) // *) cancel
+                else if(!closeStack.isEmpty()) // *) cancel
                 {
-                    closeBuffer.pop();
+                    closeStack.pop();
                     wildcardCount--;
-                    //System.out.printf("Closed not empty.\n Open: %s%n Closed: %s%n Wildcards: %s%n", openBuffer.toString(), closeBuffer.toString(), wildcardCount);
                     continue;
                 }
             }
@@ -108,8 +95,8 @@ public class WildCard
     {
         System.out.printf("Case %s%n", s);
         boolean a = isMatched(s);
-        System.out.println(a ? "Valid" : "Invalid"); // valid
-        System.out.printf("Answer is %s%n%n%n", a == valid? true : false);
+        System.out.printf("Output: %s%n", a ? "Valid" : "Invalid");
+        System.out.printf("%s%n%n", a == valid? "Correct" : "Incorrect");
     }
 }
 

@@ -8,42 +8,13 @@
 import java.lang.RuntimeException;
 
 public class ArrayStack {
-
-    /* 
-    public static void main(String[] args) {
-        ArrayStack testStack = new ArrayStack();
-        
-        System.out.println(testStack.isEmpty());
-
-        testStack.push('A');
-        System.out.println(testStack.toString());
-        testStack.push('B');
-        System.out.println(testStack.toString());
-        
-        System.out.println(testStack.size());
-        System.out.println(testStack.isFull());
-
-        // This should trigger an expansion
-        testStack.push('C');  // Expected output: expansion messages
-        System.out.println(testStack.toString());
-        System.out.println(testStack.size());
-
-        testStack.push('D');
-        System.out.println(testStack.toString());
-        testStack.push('E');
-        System.out.println(testStack.toString());
-        System.out.println(testStack.pop());
-
-        System.out.println(testStack.top());
-        System.out.println(testStack.toString());
-    }
-    */
     
     private final static int startingSize = 2;
     private char[] stack;
     private int capacity;
     // iterator
     private int iterator;
+    private boolean resizePrint;
     
     // constructor
     public ArrayStack()
@@ -51,6 +22,7 @@ public class ArrayStack {
         stack = new char[startingSize];
         capacity = startingSize;
         iterator = 0;
+        resizePrint = true;
     }
 
     // pushes a new character onto the stack
@@ -101,10 +73,15 @@ public class ArrayStack {
         return false;
     }
 
+    public void silence()
+    {
+        resizePrint = false;
+    }
+
     private void resize()
     {
         capacity *= 2;
-        System.out.println("Stack is full, with current capacity " + iterator + ".\n"+
+        if(resizePrint) System.out.println("Stack is full, with current capacity " + iterator + ".\n"+
                 "Capacity will be increased to: " + capacity +".\n");
         char[] tmpStack = new char[capacity];
         for(int i = 0; i < size(); i++)
