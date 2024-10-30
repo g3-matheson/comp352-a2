@@ -37,7 +37,7 @@ public class WildCard
         {
             nTests++;
             String nextLine = fileIn.nextLine();
-            String[] parsedLine = nextLine.replaceAll("\s", "").split(",");
+            String[] parsedLine = nextLine.replaceAll("\s||$", "").split(",");
             wildcardTest(parsedLine[0], parsedLine[1].equals("1")? true : false);
         }
 
@@ -46,7 +46,7 @@ public class WildCard
         System.out.printf("%s tests performed, %s correct (%2s%%)", nTests, nCorrect, 100 * (float) nCorrect / nTests);
     }
 
-    public static boolean isMatched(String expression) 
+    public static boolean isMatched(String expression, char initiator, char closer) 
     {
         openStack = new ArrayStack();
         wildcardCount = 0;
@@ -57,33 +57,24 @@ public class WildCard
         // process string one character at a time
         for(int i = 0; i < n; i++)
         {
-            switch(expression.charAt(i))
+            char c = expression.charAt(i);
+            if(c == initiator)
             {
-                case opening:
-                    if(i == n-2) return false;
-                    else openStack.push('(');
-                    break;
-                case closing:
-                    if(openStack.isEmpty())
-                    {
-                        if(wildcardCount == 0) return false;
-                        else wildcardCount--;
-                    }
-                    else
-                    {
-                        openStack.pop();
-                    }
-                    break;
-                case wildcard:
-                    wildcardCount++;
-                    break;
-                case endchar:
-                default:
-                    break;
-
+                if(i == n-1) return false;
+                    else openStack.push(initiator);
             }
+            else if(c == closer)
+            {
+                if(openStack.isEmpty())
+                {
+                    if(wildcardCount == 0) return false;
+                    else wildcardCount--;
+                }
+                else openStack.pop();
+            }
+            else if(c == wildcard) wildcardCount++;
         }
-
+        
         while(!openStack.isEmpty())
         {
             if(wildcardCount > 0)
@@ -100,13 +91,14 @@ public class WildCard
 
     private static void wildcardTest(String s, boolean valid)
     {
-        boolean a = isMatched(s);
-        if(a == valid) nCorrect++;
-        if(a != valid || !silenceCorrectTests)
+        boolean algoAnswer = isMatched(s, opening, closing) 
+                          && isMatched(new StringBuilder(s).reverse().toString(), closing, opening);
+        if(algoAnswer== valid) nCorrect++;
+        if(algoAnswer!= valid || !silenceCorrectTests)
         {
             System.out.printf("Test %s: %s%n", nTests, s);
-            System.out.printf("Output: %s%n", a ? "Valid" : "Invalid");
-            System.out.printf("%s%n%n", a == valid? "Correct" : "Incorrect");
+            System.out.printf("Output: %s%n", algoAnswer? "Valid" : "Invalid");
+            System.out.printf("%s%n%n", algoAnswer== valid? "Correct" : "Incorrect");
         }
         
     }
