@@ -12,12 +12,12 @@ public class WildCard
 
     // stack and wildcard counter used for processing
     static ArrayStack openStack;
-    static int wildcardCount;
+    static ArrayStack wildcardCount;
 
     // dev options
     static boolean silenceResizing = true;
     static boolean silenceCorrectTests = true;
-    static final String filename = "src\\test_answers.txt";
+    static final String filename = ".\\Stacks and Wildcards\\src\\test_answers.txt";
 
     // testing trackers
     static int nTests = 0;
@@ -43,8 +43,8 @@ public class WildCard
             nTests++;
             String nextLine = fileIn.nextLine();
             // remove trailing spaces and $ char, split on ','
-            String[] parsedLine = nextLine.replaceAll("\s||$", "").split(",");
-            wildcardTest(parsedLine[0], parsedLine[1].equals("1")? true : false);
+            String[] parsedLine = nextLine.replaceAll(" ||$", "").split(",");
+            wildcardTest(parsedLine[0], parsedLine[1].equals("1"));
         }
         fileIn.close(); // done reading file, close
 
@@ -59,7 +59,7 @@ public class WildCard
     {
         // has to be true in reverse as well due to symmetry
         // resolves problem of cases like *( being considered valid (when done "forward")
-        boolean algoAnswer = isValid(s, opening, closing) 
+        boolean algoAnswer = isValid(s, opening, closing)
                           && isValid(new StringBuilder(s).reverse().toString(), closing, opening);
         if(algoAnswer== valid) nCorrect++; // for testing
         if(algoAnswer!= valid || !silenceCorrectTests) // can silence correct tests to narrow down problems
@@ -74,11 +74,11 @@ public class WildCard
     // checks if wildcard expression is valid
     // when forward: opener is (, closer is )
     // when backward: opener is ), closer is (
-    public static boolean isValid(String expression, char opener, char closer) 
+    public static boolean isValid(String expression, char opener, char closer)
     {
         // initialize
         openStack = new ArrayStack();
-        wildcardCount = 0;
+        wildcardCount = new ArrayStack();
 
         // for testing, change above
         if(silenceResizing) openStack.silence();
@@ -88,7 +88,7 @@ public class WildCard
         for(int i = 0; i < n; i++)
         {
             char c = expression.charAt(i);
-            if(c == opener) 
+            if(c == opener)
             {
                 if(i == n-1) return false; // INVALID if opener at the end of the string
                 else openStack.push(opener); // openers always counted otherwise
@@ -97,12 +97,12 @@ public class WildCard
             {
                 if(openStack.isEmpty()) // if no opener to match closer, have to use wildcard
                 {
-                    if(wildcardCount == 0) return false; // INVALID if no wildcards left
-                    else wildcardCount--; // subtract wildcard to cancel closer
+                    if(wildcardCount.isEmpty()) return false; // INVALID if no wildcards left
+                    else wildcardCount.pop(); // subtract wildcard to cancel closer
                 }
                 else openStack.pop(); // if opener present, cancel with closer
             }
-            else if(c == wildcard) wildcardCount++;
+            else if(c == wildcard) wildcardCount.push(wildcard);
         }
         
         // now there can only be wildcards or openers left (hanging closers lead to INVALID)
@@ -111,10 +111,10 @@ public class WildCard
             // that doesn't yet see the wildcard to its left
         while(!openStack.isEmpty())
         {
-            if(wildcardCount > 0) // pop if wildcard available
+            if(!wildcardCount.isEmpty()) // pop if wildcard available
             {
                 openStack.pop();
-                wildcardCount--;
+                wildcardCount.pop();
             }
             else break;
         }

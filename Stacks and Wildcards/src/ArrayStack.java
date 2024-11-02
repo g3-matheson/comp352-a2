@@ -73,11 +73,13 @@ public class ArrayStack {
         return false;
     }
 
+    //makes sure to resize the print to false so it know it does not need to happen again
     public void silence()
     {
         resizePrint = false;
     }
 
+    // takes care of the logic of resizing
     private void resize()
     {
         capacity *= 2;
@@ -91,6 +93,7 @@ public class ArrayStack {
         stack = tmpStack;
     }
 
+    // returns the stack as a string
     public String toString()
     {
         String s = "";
